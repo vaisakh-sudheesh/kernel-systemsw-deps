@@ -42,10 +42,40 @@ function(__configure_kernel__ working_dir defconfig)
         COMMAND make O=${working_dir}/build ARCH=x86 CC=${CMAKE_C_COMPILER} build_defconfig
         COMMAND ${CMAKE_COMMAND} -E touch ${working_dir}/sources/.configured
         COMMAND echo "Configuring kernel done"
+        COMMAND echo "Applying extended configurations on the kernel"
+        
+        COMMAND scripts/config --file ${working_dir}/build/.config --disable CONFIG_SYSTEM_TRUSTED_KEYS
+        COMMAND scripts/config --file ${working_dir}/build/.config --disable CONFIG_SYSTEM_REVOCATION_KEYS
+        COMMAND scripts/config --file ${working_dir}/build/.config  --set-str CONFIG_SYSTEM_TRUSTED_KEYS \"\"
+        COMMAND scripts/config --file ${working_dir}/build/.config  --set-str CONFIG_SYSTEM_REVOCATION_KEYS \"\"
+
+        ## Enable the extended configurations
+        COMMAND scripts/config --file ${working_dir}/build/.config --enable CONFIG_KSM
+        COMMAND scripts/config --file ${working_dir}/build/.config --enable CONFIG_IDLE_PAGE_TRACKING
+
+        COMMAND scripts/config --file ${working_dir}/build/.config --enable CONFIG_DMABUF_SYSFS_STATS
+        COMMAND scripts/config --file ${working_dir}/build/.config --enable CONFIG_DMABUF_HEAPS
+        COMMAND scripts/config --file ${working_dir}/build/.config --enable CONFIG_DMABUF_HEAPS_SYSTEM
+        COMMAND scripts/config --file ${working_dir}/build/.config --enable CONFIG_DMABUF_DEBUG
+
+        COMMAND scripts/config --file ${working_dir}/build/.config --enable CONFIG_DEBUG_INFO_BTF
+        COMMAND scripts/config --file ${working_dir}/build/.config --enable CONFIG_DEBUG_INFO_DWARF_TOOLCHAIN_DEFAULT
+        COMMAND scripts/config --file ${working_dir}/build/.config --enable CONFIG_DEBUG_INFO_COMPRESSED_ZLIB
+        COMMAND scripts/config --file ${working_dir}/build/.config --enable CONFIG_PROBE_EVENTS_BTF_ARGS
+
+        COMMAND scripts/config --file ${working_dir}/build/.config --enable CONFIG_KALLSYMS
+        COMMAND scripts/config --file ${working_dir}/build/.config --enable CONFIG_SCHED_CLASS_EXT
+
+        ## Disable the extended configurations
+        COMMAND scripts/config --file ${working_dir}/build/.config --disable CONFIG_DEBUG_INFO_REDUCED
+        COMMAND scripts/config --file ${working_dir}/build/.config --disable CONFIG_DEBUG_INFO_SPLIT
+        COMMAND scripts/config --file ${working_dir}/build/.config --disable CONFIG_GDB_SCRIPTS
+
+        COMMAND echo "Applying extended configurations on the kernel done"
         DEPENDS ${patch_lists}
         WORKING_DIRECTORY ${working_dir}/sources
     )
-
+    
     add_custom_target(configure_kernel_target ALL DEPENDS ${output_config_kernel} )
 endfunction(__configure_kernel__)
 
@@ -59,27 +89,8 @@ function(__build_kernel__ working_dir)
             )
     add_custom_command(
         OUTPUT ${output_build_kernel}
-        COMMAND echo "Applying extended configurations on the kernel"
-        
-        COMMAND scripts/config --file ${working_dir}/build/.config --disable SYSTEM_TRUSTED_KEYS
-        COMMAND scripts/config --file ${working_dir}/build/.config --disable SYSTEM_REVOCATION_KEYS
-        COMMAND scripts/config --file ${working_dir}/build/.config  --set-str CONFIG_SYSTEM_TRUSTED_KEYS \"\"
-        COMMAND scripts/config --file ${working_dir}/build/.config  --set-str CONFIG_SYSTEM_REVOCATION_KEYS \"\"
-
-        COMMAND scripts/config --file ${working_dir}/build/.config --enable CONFIG_DEBUG_INFO_BTF
-        COMMAND scripts/config --file ${working_dir}/build/.config --enable CONFIG_DEBUG_INFO_DWARF_TOOLCHAIN_DEFAULT
-        COMMAND scripts/config --file ${working_dir}/build/.config --enable CONFIG_DEBUG_INFO_COMPRESSED_ZLIB
-        COMMAND scripts/config --file ${working_dir}/build/.config --enable CONFIG_PROBE_EVENTS_BTF_ARGS
-        
-        COMMAND scripts/config --file ${working_dir}/build/.config --disable CONFIG_DEBUG_INFO_REDUCED
-        COMMAND scripts/config --file ${working_dir}/build/.config --disable CONFIG_DEBUG_INFO_SPLIT
-        COMMAND scripts/config --file ${working_dir}/build/.config --disable CONFIG_GDB_SCRIPTS
-
-        COMMAND scripts/config --file ${working_dir}/build/.config --enable CONFIG_KALLSYMS
-        COMMAND scripts/config --file ${working_dir}/build/.config --enable CONFIG_SCHED_CLASS_EXT
-
         COMMAND echo "Building kernel"
-        COMMAND make O=${working_dir}/build CC=${CMAKE_C_COMPILER} ARCH=x86 -j8
+        COMMAND make O=${working_dir}/build CC=${CMAKE_C_COMPILER} ARCH=x86 -j16
         COMMAND ${CMAKE_COMMAND} -E touch ${working_dir}/build/.build
         COMMAND echo "Building kernel done"
         DEPENDS configure_kernel_target
@@ -90,11 +101,10 @@ endfunction(__build_kernel__)
 
 
 
-function (add_kernel_target version base_defconfig)
+function (base_kernel_build version base_defconfig )
     set(kernel_working_dir ${CMAKE_BINARY_DIR}/kernel-${version})
-    set(   ${CMAKE_CURRENT_LIST_DIR}/)
     __download_kernel__(${kernel_working_dir} ${version})
-    __configure_kernel__(${kernel_working_dir} ${base_defconfig})
+    __configure_kernel__(${kernel_working_dir} ${base_defconfig} )
     __build_kernel__(${kernel_working_dir})
-    add_custom_target(kernel_target-${version} ALL DEPENDS build_kernel_target)
-endfunction(add_kernel_target)
+    add_custom_target(base_kernel_target-${version} ALL DEPENDS build_kernel_target)
+endfunction(base_kernel_build)
