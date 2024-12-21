@@ -90,11 +90,11 @@ endfunction(__build_kernel__)
 
 
 
-function (add_kernel_target version extended_defconfig)
+function (add_kernel_target version base_defconfig)
     set(kernel_working_dir ${CMAKE_BINARY_DIR}/kernel-${version})
-    # set(   ${CMAKE_CURRENT_SOURCE_DIR}/configs/kernel_x86-qemu_base-minimal_defconfig)
+    set(   ${CMAKE_CURRENT_LIST_DIR}/)
     __download_kernel__(${kernel_working_dir} ${version})
-    __configure_kernel__(${kernel_working_dir} ${extended_defconfig})
+    __configure_kernel__(${kernel_working_dir} ${base_defconfig})
     __build_kernel__(${kernel_working_dir})
     add_custom_target(kernel_target-${version} ALL DEPENDS build_kernel_target)
 endfunction(add_kernel_target)
