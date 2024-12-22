@@ -24,12 +24,12 @@ function (__download_busybox__ working_dir version)
 endfunction(__download_busybox__)
 
 #Patch the busybox
-function(__patch_busybox__ working_dir )
+function(__patch_busybox__ working_dir patchfile)
     message(STATUS "Patching busybox in ${working_dir}")
     add_custom_command(
         OUTPUT ${working_dir}/sources/.patched
         COMMAND echo "Patching busybox"
-        COMMAND patch -p1 --ignore-whitespace < ${CMAKE_CURRENT_LIST_DIR}/deps/kernel-systemsw/patches/0001-E0256-Necessary-integrations.patch
+        COMMAND patch -p1 --ignore-whitespace < ${patchfile}
         COMMAND ${CMAKE_COMMAND} -E touch ${working_dir}/sources/.patched
         COMMAND echo "Patching busybox done"
         WORKING_DIRECTORY ${working_dir}/sources
@@ -94,10 +94,10 @@ function(__install_busybox__ working_dir)
 endfunction(__install_busybox__)
 
 ### Create the busybox target
-function(base_busybox_build version)
+function(base_busybox_build version patchfile)
     set(busybox_working_dir ${CMAKE_BINARY_DIR}/busybox-${version})
     __download_busybox__(${busybox_working_dir} ${version})
-    __patch_busybox__(${busybox_working_dir})
+    __patch_busybox__(${busybox_working_dir} ${patchfile})
     __configure_busybox__(${busybox_working_dir})
     __build_busybox__(${busybox_working_dir})
     __install_busybox__(${busybox_working_dir})
