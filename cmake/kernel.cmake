@@ -63,6 +63,15 @@ function(__configure_kernel__ working_dir defconfig)
         COMMAND scripts/config --file ${working_dir}/build/.config --enable CONFIG_DEBUG_INFO_COMPRESSED_ZLIB
         COMMAND scripts/config --file ${working_dir}/build/.config --enable CONFIG_PROBE_EVENTS_BTF_ARGS
 
+        COMMAND scripts/config --file ${working_dir}/build/.config --enable CONFIG_NET
+        COMMAND scripts/config --file ${working_dir}/build/.config --enable CONFIG_NET_9P
+        COMMAND scripts/config --file ${working_dir}/build/.config --enable CONFIG_NET_9P_VIRTIO
+        COMMAND scripts/config --file ${working_dir}/build/.config --enable CONFIG_NET_9P_DEBUG
+        COMMAND scripts/config --file ${working_dir}/build/.config --enable CONFIG_9P_FS
+        COMMAND scripts/config --file ${working_dir}/build/.config --enable CONFIG_9P_FS_POSIX_ACL
+        COMMAND scripts/config --file ${working_dir}/build/.config --enable CONFIG_PCI
+        COMMAND scripts/config --file ${working_dir}/build/.config --enable CONFIG_VIRTIO_PCI
+
         COMMAND scripts/config --file ${working_dir}/build/.config --enable CONFIG_KALLSYMS
         COMMAND scripts/config --file ${working_dir}/build/.config --enable CONFIG_SCHED_CLASS_EXT
 
